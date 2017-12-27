@@ -16,6 +16,7 @@ if os.path.exists(cred_path):
 else:
     credentials = {
         "subdomain": "d3v-zenpydev",
+        "domain": "zendesk.com",
         "email": "example@example.com",
         "token": "not really a token"
     }
@@ -74,7 +75,8 @@ def teardown_package():
     with recorder.use_cassette(cassette_name="teardown_package", serialize_with='prettyjson'):
         n = chunk_action(zenpy_client.tickets(), zenpy_client.tickets.delete)
         print("Deleted {} tickets".format(n))
-        n = chunk_action(zenpy_client.users(), zenpy_client.users.delete, ignore_func=lambda x: x.role == "admin")
+        n = chunk_action(zenpy_client.users(), zenpy_client.users.delete,
+                         ignore_func=lambda x: x.role == "admin")
         print("Deleted {} users".format(n))
 
 
@@ -82,13 +84,15 @@ def configure():
     config = Betamax.configure()
     config.cassette_library_dir = "tests/test_api/betamax/"
     config.default_cassette_options['record_mode'] = 'once'
-    config.default_cassette_options['match_requests_on'] = ['method', 'path_matcher']
+    config.default_cassette_options['match_requests_on'] = [
+        'method', 'path_matcher']
     if credentials:
         auth_key = 'token' if 'token' in credentials else 'password'
         config.define_cassette_placeholder(
             '<ZENPY-CREDENTIALS>',
             str(base64.b64encode(
-                "{}/token:{}".format(credentials['email'], credentials[auth_key]).encode('utf-8')
+                "{}/token:{}".format(credentials['email'],
+                                     credentials[auth_key]).encode('utf-8')
             ))
         )
     session = requests.Session()

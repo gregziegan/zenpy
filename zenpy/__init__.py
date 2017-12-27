@@ -52,6 +52,7 @@ class Zenpy(object):
         )
 
     def __init__(self, subdomain=None,
+                 domain=None,
                  email=None,
                  token=None,
                  oauth_token=None,
@@ -71,6 +72,7 @@ class Zenpy(object):
 
 
         :param subdomain: your Zendesk subdomain
+        :param domain: a custom Zendesk domain
         :param email: email address
         :param token: Zendesk API token
         :param oauth_token: OAuth token
@@ -81,12 +83,14 @@ class Zenpy(object):
         :param ratelimit_budget: maximum time to spend being rate limited
         """
 
-        session = self._init_session(email, token, oauth_token, password, session)
+        session = self._init_session(
+            email, token, oauth_token, password, session)
 
         timeout = timeout or self.DEFAULT_TIMEOUT
 
         config = dict(
             subdomain=subdomain,
+            domain=domain,
             session=session,
             timeout=timeout,
             ratelimit=ratelimit,
@@ -100,12 +104,15 @@ class Zenpy(object):
         self.organizations = OrganizationApi(config)
         self.organization_memberships = OrganizationMembershipApi(config)
         self.tickets = TicketApi(config)
-        self.suspended_tickets = SuspendedTicketApi(config, object_type='suspended_ticket')
-        self.search = Api(config, object_type='results', endpoint=EndpointFactory('search'))
+        self.suspended_tickets = SuspendedTicketApi(
+            config, object_type='suspended_ticket')
+        self.search = Api(config, object_type='results',
+                          endpoint=EndpointFactory('search'))
         self.topics = Api(config, object_type='topic')
         self.attachments = AttachmentApi(config)
         self.brands = Api(config, object_type='brand')
-        self.job_status = Api(config, object_type='job_status', endpoint=EndpointFactory('job_statuses'))
+        self.job_status = Api(config, object_type='job_status',
+                              endpoint=EndpointFactory('job_statuses'))
         self.tags = Api(config, object_type='tag')
         self.satisfaction_ratings = SatisfactionRatingApi(config)
         self.sharing_agreements = SharingAgreementAPI(config)
@@ -128,12 +135,14 @@ class Zenpy(object):
         if not session:
             session = requests.Session()
             # Workaround for possible race condition - https://github.com/kennethreitz/requests/issues/3661
-            session.mount('https://', HTTPAdapter(**self.http_adapter_kwargs()))
+            session.mount('https://', HTTPAdapter(**
+                                                  self.http_adapter_kwargs()))
 
         if not hasattr(session, 'authorized') or not session.authorized:
             # session is not an OAuth session that has been authorized, so authorize the session.
             if not password and not token and not oath_token:
-                raise ZenpyException("password, token or oauth_token are required!")
+                raise ZenpyException(
+                    "password, token or oauth_token are required!")
             elif password and token:
                 raise ZenpyException("password and token "
                                      "are mutually exclusive!")
@@ -142,7 +151,8 @@ class Zenpy(object):
             elif token:
                 session.auth = ('%s/token' % email, token)
             elif oath_token:
-                session.headers.update({'Authorization': 'Bearer %s' % oath_token})
+                session.headers.update(
+                    {'Authorization': 'Bearer %s' % oath_token})
             else:
                 raise ZenpyException("Invalid arguments to _init_session()!")
 
@@ -179,7 +189,8 @@ class Zenpy(object):
         """
         Changes the cache implementation for the named cache
         """
-        self._get_cache(cache_name).set_cache_impl(impl_name, maxsize, **kwargs)
+        self._get_cache(cache_name).set_cache_impl(
+            impl_name, maxsize, **kwargs)
 
     def add_cache(self, object_type, cache_impl_name, maxsize, **kwargs):
         """
@@ -187,7 +198,8 @@ class Zenpy(object):
         """
         if object_type not in ZendeskObjectMapping.class_mapping:
             raise ZenpyException("No such object type: %s" % object_type)
-        cache_mapping[object_type] = ZenpyCache(cache_impl_name, maxsize, **kwargs)
+        cache_mapping[object_type] = ZenpyCache(
+            cache_impl_name, maxsize, **kwargs)
 
     def delete_cache(self, cache_name):
         """
