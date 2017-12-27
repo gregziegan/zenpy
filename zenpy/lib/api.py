@@ -45,15 +45,16 @@ class BaseApi(object):
     rate limiting and deserializing responses.
     """
 
-    def __init__(self, subdomain, session, timeout, ratelimit, ratelimit_budget):
+    def __init__(self, subdomain, session, timeout, ratelimit, ratelimit_budget, domain='zendesk.com'):
         self.subdomain = subdomain
+        self.domain = domain
         self.session = session
         self.timeout = timeout
         self.ratelimit = ratelimit
         self.ratelimit_budget = ratelimit_budget
         self.protocol = 'https'
         self.api_prefix = 'api/v2'
-        self._url_template = "%(protocol)s://%(subdomain)s.zendesk.com/%(api_prefix)s"
+        self._url_template = "%(protocol)s://%(subdomain)s.%(domain)s/%(api_prefix)s"
         self.callsafety = {
             'lastcalltime': None,
             'lastlimitremaining': None
@@ -1266,7 +1267,7 @@ class HelpCentreApiBase(Api):
         self._response_handlers = (MissingTranslationHandler,) + self._response_handlers
 
         self._object_mapping = HelpCentreObjectMapping(self)
-        self._url_template = "%(protocol)s://%(subdomain)s.zendesk.com/%(api_prefix)s%(locale)s"
+        self._url_template = "%(protocol)s://%(subdomain)s.%(domain)s/%(api_prefix)s%(locale)s"
         self.locale = ''
 
     def _process_response(self, response):
@@ -1279,7 +1280,7 @@ class HelpCentreApiBase(Api):
 
     def _build_url(self, endpoint='', template=None):
         if endpoint.startswith('users/') and not endpoint.endswith('comments.json'):
-            template = "%(protocol)s://%(subdomain)s.zendesk.com/%(api_prefix)s"
+            template = "%(protocol)s://%(subdomain)s.%(domain)s/%(api_prefix)s"
         return super(HelpCentreApiBase, self)._build_url(endpoint, template=template)
 
 
